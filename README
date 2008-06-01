@@ -1,1 +1,4 @@
 WRS is a collection of tools and applications used to monitor World of Warcraft realms.
+
+This suite includes:
+* wrsd -- An Erlang application that polls all realms to provide an interface to test individual realm status.
