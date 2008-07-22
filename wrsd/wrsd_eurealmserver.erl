@@ -1,4 +1,4 @@
--module(wrsd_realmserver).
+-module(wrsd_eurealmserver).
 -behaviour(gen_server).
 
 -export([start_link/1, init/1, handle_call/3, handle_cast/2, handle_info/2]).

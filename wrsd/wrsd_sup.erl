@@ -8,7 +8,8 @@ start_link(_) ->
 
 init(Args) ->
     {ok, {{one_for_one, 2, 10}, [
-        {wrsd_realmserver, {wrsd_realmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_realmserver]},
+        {wrsd_usrealmserver, {wrsd_usrealmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_usrealmserver]},
+        {wrsd_eurealmserver, {wrsd_eurealmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_eurealmserver]},
         {wrsd_yaws, {wrsd_yaws, start_link, [Args]}, permanent, 2000, worker, [wrsd_yaws]}
     ]}}.
 

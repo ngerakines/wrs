@@ -11,8 +11,24 @@ out(Arg) ->
     {_, ReqPath} = Req#http_request.path,
     wrsd_handler:handle_request(Req#http_request.method, ReqPath, Arg).
 
+handle_request('GET', "/realm/us/" ++ Realm, _Arg) ->
+    case gen_server:call(wrsd_usrealmserver, {lookup, Realm}) of
+        {ok, Record} ->
+            XmlBody = wrsd_realm:record_to_xml(Record),
+            make_response(200, XmlBody);
+        _ -> make_response(404, "<error>No data for that realm.</error>")
+    end;
+
+handle_request('GET', "/realm/eu/" ++ Realm, _Arg) ->
+    case gen_server:call(wrsd_eurealmserver, {lookup, Realm}) of
+        {ok, Record} ->
+            XmlBody = wrsd_realm:record_to_xml(Record),
+            make_response(200, XmlBody);
+        _ -> make_response(404, "<error>No data for that realm.</error>")
+    end;
+
 handle_request('GET', "/realm/" ++ Realm, _Arg) ->
-    case gen_server:call(wrsd_realmserver, {lookup, Realm}) of
+    case gen_server:call(wrsd_usrealmserver, {lookup, Realm}) of
         {ok, Record} ->
             XmlBody = wrsd_realm:record_to_xml(Record),
             make_response(200, XmlBody);

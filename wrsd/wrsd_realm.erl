@@ -6,9 +6,10 @@
 -include("wrsd.hrl").
 
 process(Type) ->
-    case fetch(Type) of
-        {ok, Body} -> decompose_body(Body);
-        _ -> []
+    case [Type, fetch(Type)] of
+        [us, {ok, Body}] -> decompose_body(us, Body);
+        [eu, {ok, Body}] -> decompose_body(eu, Body);
+	_ -> []
     end.
 
 fetch(Type) ->
@@ -18,9 +19,18 @@ fetch(Type) ->
         X -> {error, X}
     end.
 
-url(_) -> "http://www.worldofwarcraft.com/realmstatus/status.xml".
+url(us) -> "http://www.worldofwarcraft.com/realmstatus/status.xml";
+url(eu) -> "http://www.wow-europe.com/realmstatus/index.html".
 
-decompose_body(Body) ->
+decompose_body(eu, Body) ->
+    {match, Matches} = regexp:matches(Body, "<a name=\"([^\"]*)\"></a>"),
+    lists:ukeysort(2, [begin
+        RawMatch = string:substr(Body, Pos, Len),
+	RealmName = string:sub_string(RawMatch, 10, length(RawMatch) - 6),
+        #realm{ name = list_to_binary(RealmName), status = 99, type = 99, population = 99 }
+    end || {Pos, Len} <- Matches]);
+
+decompose_body(us, Body) ->
     try xmerl_scan:string(Body) of
         {XmlElem, _} ->
             %% {ok, XmlElem};
@@ -30,7 +40,7 @@ decompose_body(Body) ->
                         || Attr <- Elem#xmlElement.attributes],
                     #realm{}
                 )
-            end || Elem <- xmerl_xpath:string("/rs/r", XmlElem)];
+            end || Elem <- xmerl_xpath:string("//rs/r", XmlElem)];
         _ -> {error, unknown}
     catch
         _:_ -> {error, throw}
@@ -60,14 +70,17 @@ record_to_xml(Rec) ->
     Export=xmerl:export_simple([NewRootEl], xmerl_xml),
     lists:flatten(Export).
 
+clean_status(99) -> "unknown";
 clean_status(1) -> "up";
 clean_status(_) -> "down".
 
+clean_type(99) -> "unknown";
 clean_type(1) -> "pve";
 clean_type(2) -> "pvp";
 clean_type(3) -> "rp";
 clean_type(_) -> "pvprp".
 
+clean_population(99) -> "unknown";
 clean_population(2) -> "medium";
 clean_population(3) -> "high";
 clean_population(4) -> "max";

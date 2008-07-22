@@ -1,6 +1,7 @@
 -module(wrsd_yaws).
 -behaviour(gen_server).
 
+-include("wrsd.hrl").
 -include_lib("yaws/include/yaws.hrl").
 
 -export([start_link/1, init/1, handle_call/3, handle_cast/2, handle_info/2]).
