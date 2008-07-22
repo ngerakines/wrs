@@ -1,6 +1,6 @@
 -module(wrsd_realm).
 
--export([process/1, record_to_xml/1]).
+-export([process/1, record_to_xml/1, record_to_json/1]).
 
 -include_lib("xmerl/include/xmerl.hrl").
 -include("wrsd.hrl").
@@ -55,6 +55,15 @@ aggregate_realm([Head | Tail], Rec) ->
         {l, Population} -> Rec#realm{ population = list_to_integer(Population) }
     end,
     aggregate_realm(Tail, NewRec).
+
+record_to_json(Rec) ->
+    Data = [
+        {name, Rec#realm.name},
+	{status, list_to_binary(clean_status(Rec#realm.status))},
+	{type, list_to_binary(clean_status(Rec#realm.type))},
+	{population, list_to_binary(clean_status(Rec#realm.population))}
+    ],
+    rfc4627:encode([{obj, Data}]).
 
 record_to_xml(Rec) ->
     Data = [
