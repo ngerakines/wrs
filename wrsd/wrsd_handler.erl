@@ -11,6 +11,32 @@ out(Arg) ->
     {_, ReqPath} = Req#http_request.path,
     wrsd_handler:handle_request(Req#http_request.method, ReqPath, Arg).
 
+handle_request('GET', "/realm/us/", _Arg) ->
+    case gen_server:call(wrsd_usrealmserver, {realm_list}) of
+        {ok, Realms} ->
+	    {RootEl, _} = xmerl_scan:string("<realms xmlns=\"urn:wrsd:realm\" />"),
+	    #xmlElement{content = Content} = RootEl,
+	    NewContent = Content ++ lists:flatten([[{realm, [], [binary_to_list(Realm)]} || Realm <- Realms]]),
+	    NewRootEl = RootEl#xmlElement{content = NewContent},
+	    Export = xmerl:export_simple([NewRootEl], xmerl_xml),
+	    XmlBody = lists:flatten(Export),
+            make_response(200, XmlBody);
+        _ -> make_response(404, "<error>No data for that realm.</error>")
+    end;
+
+handle_request('GET', "/realm/eu/", _Arg) ->
+    case gen_server:call(wrsd_eurealmserver, {realm_list}) of
+        {ok, Realms} ->
+	    {RootEl, _} = xmerl_scan:string("<realms xmlns=\"urn:wrsd:realm\" />"),
+	    #xmlElement{content = Content} = RootEl,
+	    NewContent = Content ++ lists:flatten([[{realm, [], [binary_to_list(Realm)]} || Realm <- Realms]]),
+	    NewRootEl = RootEl#xmlElement{content = NewContent},
+	    Export = xmerl:export_simple([NewRootEl], xmerl_xml),
+	    XmlBody = lists:flatten(Export),
+            make_response(200, XmlBody);
+        _ -> make_response(404, "<error>No data for that realm.</error>")
+    end;
+
 handle_request('GET', "/realm/us/" ++ Realm, _Arg) ->
     case gen_server:call(wrsd_usrealmserver, {lookup, Realm}) of
         {ok, Record} ->
