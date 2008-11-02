@@ -1,9 +1,11 @@
 -module(wrsd).
 -behaviour(application).
 
--compile(export_all).
+-export([start/2, stop/1, start_phase/3, init/1]).
+-export([update_loop/0, build_rel/0]).
 
-start(_Type, Args) -> wrsd_sup:start_link(Args).
+start(_Type, _Args) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 stop(_State) -> ok.
 
@@ -11,9 +13,15 @@ start_phase(update_loop, _, _) ->
     spawn(?MODULE, update_loop, []),
     ok.
 
+init(Args) ->
+    {ok, {{one_for_one, 2, 10}, [
+        {wrsd_realmserver, {wrsd_realmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_realmserver]},
+        {wrsd_web, {wrsd_web, start, [nil]}, permanent, 2000, worker, dynamic}
+    ]}}.
+
 update_loop() ->
-    spawn(fun() -> [wrsd_realmserver:write(Realm) || Realm <- wrsd_realm:process(us)] end),
-    timer:sleep(?UPDATEINTERVAL),
+    spawn(fun() -> [wrsd_realmserver:write(Realm) || Realm <- wrsd_realmserver:process(us)] end),
+    timer:sleep(60000*10),
     wrsd:update_loop().
 
 %% @spec build_rel() -> ok
@@ -26,7 +34,7 @@ build_rel() ->
         {RootDir ++ "/lib/", "kernel-*"},
         {RootDir ++ "/lib/", "stdlib-*"},
         {RootDir ++ "/lib/", "sasl-*"},
-        {RootDir ++ "/lib/", "inets-*"},
+        {RootDir ++ "/lib/", "inets-*"}
     ],
     [Erts, Kerne, Stdl, Sasl, Inet] = [begin
         [R | _ ] = filelib:wildcard(P, D),
@@ -34,13 +42,13 @@ build_rel() ->
         Ra
     end || {D, P} <- Patterns],
     RelInfo = {release,
-        {"wrsd", wrsd:version()},
+        {"wrsd", "0.2"},
         {erts, Erts}, [
             {kernel, Kerne},
             {stdlib, Stdl},
             {sasl, Sasl},
             {inets, Inet},
-            {wrsd, wrsd:version()}
+            {wrsd, "0.2"}
         ]
     },
     io:format(FD, "~p.", [RelInfo]),

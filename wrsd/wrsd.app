@@ -1,13 +1,10 @@
 {application, wrsd, [
     {description, "An Erlang World of Warcraft realm status daemon"},
-    {vsn, "0.1"},
+    {vsn, "0.2"},
     {modules, [
         wrsd,
-        wrsd_handler,
-        wrsd_realm,
         wrsd_realmserver,
-        wrsd_sup,
-        wrsd_yaws
+        wrsd_web
     ]},
     {registered, [wrsd]},
     {applications, [kernel, stdlib, sasl]},
