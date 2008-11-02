@@ -7,6 +7,7 @@
 start(_Type, _Args) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
+
 stop(_State) -> ok.
 
 start_phase(update_loop, _, _) ->
@@ -15,12 +16,14 @@ start_phase(update_loop, _, _) ->
 
 init(Args) ->
     {ok, {{one_for_one, 2, 10}, [
-        {wrsd_realmserver, {wrsd_realmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_realmserver]},
+        {wrsd_eurealmserver, {wrsd_eurealmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_eurealmserver]},
+        {wrsd_usrealmserver, {wrsd_usrealmserver, start_link, [Args]}, permanent, 2000, worker, [wrsd_usrealmserver]},
         {wrsd_web, {wrsd_web, start, [nil]}, permanent, 2000, worker, dynamic}
     ]}}.
 
 update_loop() ->
-    spawn(fun() -> [wrsd_realmserver:write(Realm) || Realm <- wrsd_realmserver:process(us)] end),
+    spawn(fun() -> [wrsd_usrealmserver:write(Realm) || Realm <- wrsd_realm:process(us)] end),
+    spawn(fun() -> [wrsd_eurealmserver:write(Realm) || Realm <- wrsd_realm:process(eu)] end),
     timer:sleep(60000*10),
     wrsd:update_loop().
 

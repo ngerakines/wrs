@@ -14,10 +14,42 @@ start(_) ->
 stop() ->
     mochiweb_http:stop(?MODULE).
 
-handle_request('GET', "/realm/" ++ Realm, Req) ->
-    case gen_server:call(wrsd_realmserver, {lookup, Realm}) of
+handle_request('GET', "/realms/us/", Req) ->
+    case wrsd_usrealmserver:realms() of
+        {ok, Realms} ->
+	        XmlBody = mochijson2:encode(Realms),
+            make_response(Req, 200, XmlBody);
+        _ -> make_response(Req, 404, "<error>No data for that realm.</error>")
+    end;
+
+handle_request('GET', "/realms/eu/", Req) ->
+    case wrsd_eurealmserver:realms() of
+        {ok, Realms} ->
+	        XmlBody = mochijson2:encode(Realms),
+            make_response(Req, 200, XmlBody);
+        _ -> make_response(Req, 404, "<error>No data for that realm.</error>")
+    end;
+
+handle_request('GET', "/realm/us/" ++ Realm, Req) ->
+    case wrsd_usrealmserver:lookup(Realm) of
         {ok, Record} ->
-            XmlBody = wrsd_realmserver:record_to_xml(Record),
+            XmlBody = wrsd_realm:record_to_json(Record),
+            make_response(Req, 200, XmlBody);
+        _ -> make_response(Req, 404, "<error>No data for that realm.</error>")
+    end;
+
+handle_request('GET', "/realm/eu/" ++ Realm, Req) ->
+    case wrsd_eurealmserver:lookup(Realm) of
+        {ok, Record} ->
+            XmlBody = wrsd_realm:record_to_json(Record),
+            make_response(Req, 200, XmlBody);
+        _ -> make_response(Req, 404, "<error>No data for that realm.</error>")
+    end;
+
+handle_request('GET', "/realm/" ++ Realm, Req) ->
+    case wrsd_usrealmserver:lookup(Realm) of
+        {ok, Record} ->
+            XmlBody = wrsd_realm:record_to_json(Record),
             make_response(Req, 200, XmlBody);
         _ -> make_response(Req, 404, "<error>No data for that realm.</error>")
     end;
