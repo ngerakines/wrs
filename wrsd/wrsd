@@ -4,7 +4,7 @@ WORKING_DIR=/var/erlang/wrsdapp
 
 case $1 in
 'start' )
-    erl -detached -setcookie wrsdcookie -name wrsdapp@`hostname` +W w +A 1 +Ktrue 
+    erl -detached -setcookie wrsdcookie -name wrsdapp@`hostname` +W w +A 1 +Ktrue -eval '[application:start(X) || X <- [inets, wrsd]].' 
     ;;
 'stop' )
     erl -setcookie wrsdcookie -name wrsdctl@`hostname` -noshell -s wrsd stop -s init stop -- wrsdapp@`hostname`
