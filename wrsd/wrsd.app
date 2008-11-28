@@ -10,5 +10,5 @@
     ]},
     {registered, [wrsd]},
     {applications, [kernel, stdlib, sasl, inets]},
-    {mod, {wrsd, []}},
+    {mod, {wrsd, []}}
 ]}.
