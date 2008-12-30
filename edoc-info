@@ -1,0 +1,2 @@
+{packages,[]}.
+{modules,[wrsd,wrsd_eurealmserver,wrsd_realm,wrsd_usrealmserver,wrsd_web]}.
